@@ -4,42 +4,42 @@
  */
 package sistema_consultas;
 
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 
 public class Sistema_Consultas extends JFrame {
 
     public Sistema_Consultas() {
-        setTitle("Sistema de Consultas");
+        setTitle("Sistema de Consultas - Menú Principal");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 250);
+        setSize(400, 300);
         setLocationRelativeTo(null);
         setLayout(new GridLayout(4, 1, 10, 10));
 
+        // Botones para cada operación
         JButton btnAlta = new JButton("Alta de Persona");
         JButton btnBaja = new JButton("Baja de Persona");
-        JButton btnConsulta = new JButton("Consultar Personas");
-        JButton btnModificacion = new JButton("Modificar Persona");
+        JButton btnModificar = new JButton("Modificar Persona");
+        JButton btnConsultar = new JButton("Consultar Persona");
 
+        // Agregar botones al frame
         add(btnAlta);
         add(btnBaja);
-        add(btnConsulta);
-        add(btnModificacion);
+        add(btnModificar);
+        add(btnConsultar);
 
         // Listeners para abrir cada ventana
-        btnAlta.addActionListener((ActionEvent e) -> new AltaPersonaFrame().setVisible(true));
-        btnBaja.addActionListener((ActionEvent e) -> new BajaPersonaFrame().setVisible(true));
-        btnConsulta.addActionListener((ActionEvent e) -> new ConsultaPersonaFrame().setVisible(true));
-        btnModificacion.addActionListener((ActionEvent e) -> new ModificarPersonaFrame().setVisible(true));
+        btnAlta.addActionListener(e -> SwingUtilities.invokeLater(() -> new AltaPersonaFrame().setVisible(true)));
+        btnBaja.addActionListener(e -> SwingUtilities.invokeLater(() -> new BajaPersonaFrame().setVisible(true)));
+        btnModificar.addActionListener(e -> SwingUtilities.invokeLater(() -> new ModificarPersonaFrame().setVisible(true)));
+        btnConsultar.addActionListener(e -> SwingUtilities.invokeLater(() -> new ConsultaPersonaFrame().setVisible(true)));
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception ignored) {}
-            new Sistema_Consultas().setVisible(true);
+            Sistema_Consultas sistema = new Sistema_Consultas();
+            sistema.setVisible(true);
         });
     }
 }

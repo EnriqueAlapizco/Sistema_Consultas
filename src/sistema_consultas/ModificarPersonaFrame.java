@@ -4,189 +4,190 @@
  */
 package sistema_consultas;
 
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
+import java.awt.event.*;
+import java.util.*;
 import java.util.List;
 
 public class ModificarPersonaFrame extends JFrame {
 
-    // Campos
-    private final JTextField txtId = new JTextField(6);
-    private final JTextField txtNombre = new JTextField(25);
-    private final JTextField txtDireccion = new JTextField(25);
-    private final JTextField txtTelefono = new JTextField(15);
+    private JTextField txtId, txtNombre, txtTelefono;
+    private JButton btnCargar, btnGuardar, btnAgregarTel, btnQuitarTel, btnAgregarDir, btnQuitarDir;
+    private DefaultListModel<String> modeloTelefonos = new DefaultListModel<>();
+    private JList<String> lstTelefonos = new JList<>(modeloTelefonos);
 
-    private final DefaultListModel<String> modeloTelefonos = new DefaultListModel<>();
-    private final JList<String> lstTelefonos = new JList<>(modeloTelefonos);
+    private DefaultListModel<DireccionItem> modeloDirecciones = new DefaultListModel<>();
+    private JList<DireccionItem> lstDirecciones = new JList<>(modeloDirecciones);
+    private JTextField txtDireccion;
 
-    private final JButton btnCargar = new JButton("Cargar por ID");
-    private final JButton btnAgregarTelefono = new JButton("Agregar teléfono");
-    private final JButton btnQuitarTelefono = new JButton("Quitar seleccionado");
-    private final JButton btnActualizar = new JButton("Actualizar");
-    private final JButton btnLimpiar = new JButton("Limpiar");
+    private PersonaDAO dao = new PersonaDAO();
 
-    private final PersonaDAO dao = new PersonaDAO();
+    // Clase interna para manejar ID + calle
+    private static class DireccionItem {
+        int id;
+        String calle;
+        public DireccionItem(int id, String calle) { this.id = id; this.calle = calle; }
+        @Override public String toString() { return calle; }
+    }
 
     public ModificarPersonaFrame() {
         setTitle("Modificar Persona");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(10,10));
 
-        // Panel superior: ID + botón cargar
-        JPanel pnlId = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlId.add(new JLabel("ID Persona:"));
-        pnlId.add(txtId);
-        pnlId.add(btnCargar);
-        add(pnlId, BorderLayout.NORTH);
+        // Panel superior: ID + boton cargar
+        JPanel pnlArriba = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlArriba.add(new JLabel("ID:"));
+        txtId = new JTextField(5);
+        pnlArriba.add(txtId);
+        btnCargar = new JButton("Cargar");
+        pnlArriba.add(btnCargar);
+        add(pnlArriba, BorderLayout.NORTH);
 
-        // Panel centro: datos básicos + teléfonos
-        JPanel pnlCentro = new JPanel(new BorderLayout(10, 10));
-
-        JPanel pnlDatos = new JPanel(new GridBagLayout());
+        // Panel central: Nombre, telefonos y direcciones
+        JPanel pnlCentro = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(5,5,5,5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        gbc.gridx = 0; gbc.gridy = 0; pnlDatos.add(new JLabel("Nombre:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 0; pnlDatos.add(txtNombre, gbc);
+        gbc.gridx=0; gbc.gridy=0; pnlCentro.add(new JLabel("Nombre:"), gbc);
+        gbc.gridx=1; gbc.gridy=0; txtNombre = new JTextField(20); pnlCentro.add(txtNombre, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; pnlDatos.add(new JLabel("Dirección:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 1; pnlDatos.add(txtDireccion, gbc);
+        // Telefonos
+        gbc.gridx=0; gbc.gridy=1; gbc.gridwidth=2;
+        JPanel pnlTel = new JPanel(new BorderLayout(5,5));
+        pnlTel.setBorder(BorderFactory.createTitledBorder("Teléfonos"));
+        JPanel pnlAddTel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        txtTelefono = new JTextField(10);
+        btnAgregarTel = new JButton("Agregar");
+        btnQuitarTel = new JButton("Quitar");
+        pnlAddTel.add(txtTelefono); pnlAddTel.add(btnAgregarTel); pnlAddTel.add(btnQuitarTel);
+        pnlTel.add(pnlAddTel, BorderLayout.NORTH);
+        lstTelefonos.setVisibleRowCount(5);
+        pnlTel.add(new JScrollPane(lstTelefonos), BorderLayout.CENTER);
+        pnlCentro.add(pnlTel, gbc);
 
-        pnlCentro.add(pnlDatos, BorderLayout.NORTH);
-
-        JPanel pnlTelefonos = new JPanel(new BorderLayout(5, 5));
-        JPanel pnlAdd = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlAdd.add(new JLabel("Teléfono:"));
-        pnlAdd.add(txtTelefono);
-        pnlAdd.add(btnAgregarTelefono);
-
-        JPanel pnlBtnsTel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlBtnsTel.add(btnQuitarTelefono);
-
-        lstTelefonos.setVisibleRowCount(6);
-        JScrollPane scroll = new JScrollPane(lstTelefonos);
-
-        pnlTelefonos.add(pnlAdd, BorderLayout.NORTH);
-        pnlTelefonos.add(scroll, BorderLayout.CENTER);
-        pnlTelefonos.add(pnlBtnsTel, BorderLayout.SOUTH);
-        pnlTelefonos.setBorder(BorderFactory.createTitledBorder("Teléfonos (se reemplazarán)"));
-
-        pnlCentro.add(pnlTelefonos, BorderLayout.CENTER);
+        // Direcciones
+        gbc.gridy=2;
+        JPanel pnlDir = new JPanel(new BorderLayout(5,5));
+        pnlDir.setBorder(BorderFactory.createTitledBorder("Direcciones"));
+        JPanel pnlAddDir = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        txtDireccion = new JTextField(15);
+        btnAgregarDir = new JButton("Agregar");
+        btnQuitarDir = new JButton("Quitar");
+        pnlAddDir.add(txtDireccion); pnlAddDir.add(btnAgregarDir); pnlAddDir.add(btnQuitarDir);
+        pnlDir.add(pnlAddDir, BorderLayout.NORTH);
+        lstDirecciones.setVisibleRowCount(5);
+        pnlDir.add(new JScrollPane(lstDirecciones), BorderLayout.CENTER);
+        pnlCentro.add(pnlDir, gbc);
 
         add(pnlCentro, BorderLayout.CENTER);
 
-        // Panel inferior: acciones
-        JPanel pnlAcciones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        pnlAcciones.add(btnLimpiar);
-        pnlAcciones.add(btnActualizar);
-        add(pnlAcciones, BorderLayout.SOUTH);
+        // Panel inferior: guardar
+        JPanel pnlAbajo = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        btnGuardar = new JButton("Guardar cambios");
+        pnlAbajo.add(btnGuardar);
+        add(pnlAbajo, BorderLayout.SOUTH);
 
         // Listeners
-        btnCargar.addActionListener(this::onCargar);
-        btnAgregarTelefono.addActionListener(this::onAgregarTelefono);
-        btnQuitarTelefono.addActionListener(this::onQuitarTelefono);
-        btnActualizar.addActionListener(this::onActualizar);
-        btnLimpiar.addActionListener(e -> limpiar());
+        btnCargar.addActionListener(e -> cargarDatos());
+        btnAgregarTel.addActionListener(e -> agregarTelefono());
+        btnQuitarTel.addActionListener(e -> quitarTelefono());
+        btnAgregarDir.addActionListener(e -> agregarDireccion());
+        btnQuitarDir.addActionListener(e -> quitarDireccion());
+        btnGuardar.addActionListener(e -> guardarCambios());
 
         pack();
         setLocationRelativeTo(null);
     }
 
-    private void onCargar(ActionEvent e) {
-        int id;
+    private void cargarDatos() {
         try {
-            id = Integer.parseInt(txtId.getText().trim());
+            int id = Integer.parseInt(txtId.getText().trim());
+            String[] datos = dao.obtenerPersonaBasicaPorId(id);
+            if (datos == null) {
+                JOptionPane.showMessageDialog(this, "No se encontró persona con ese ID");
+                return;
+            }
+            txtNombre.setText(datos[0]);
+
+            // Cargar teléfonos
+            modeloTelefonos.clear();
+            List<String> telefonos = dao.obtenerTelefonosPorPersona(id);
+            for (String t : telefonos) modeloTelefonos.addElement(t);
+
+            // Cargar direcciones
+            modeloDirecciones.clear();
+            List<String> direcciones = dao.obtenerDireccionesPorPersona(id);
+            // Aquí creamos DireccionItem con ID ficticio de -1 para nuevas
+            int cont = 1;
+            for (String dir : direcciones) modeloDirecciones.addElement(new DireccionItem(cont++, dir));
+
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "ID inválido", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // 1) Cargar nombre/dirección
-        String[] basicos = dao.obtenerPersonaBasicaPorId(id);
-        if (basicos == null) {
-            JOptionPane.showMessageDialog(this, "No se encontró persona con ese ID", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        txtNombre.setText(basicos[0]);
-        txtDireccion.setText(basicos[1]);
-
-        // 2) Cargar teléfonos
-        modeloTelefonos.clear();
-        for (String tel : dao.obtenerTelefonosPorPersona(id)) {
-            modeloTelefonos.addElement(tel);
+            JOptionPane.showMessageDialog(this, "ID inválido");
         }
     }
 
-    private void onAgregarTelefono(ActionEvent e) {
-        String tel = txtTelefono.getText().trim();
-        if (tel.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Ingresa un teléfono", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        modeloTelefonos.addElement(tel);
-        txtTelefono.setText("");
-        txtTelefono.requestFocus();
+    private void agregarTelefono() {
+        String t = txtTelefono.getText().trim();
+        if (!t.isEmpty()) { modeloTelefonos.addElement(t); txtTelefono.setText(""); }
     }
 
-    private void onQuitarTelefono(ActionEvent e) {
+    private void quitarTelefono() {
         int idx = lstTelefonos.getSelectedIndex();
-        if (idx == -1) {
-            JOptionPane.showMessageDialog(this, "Selecciona un teléfono para quitar", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        modeloTelefonos.remove(idx);
+        if (idx != -1) modeloTelefonos.remove(idx);
     }
 
-    private void onActualizar(ActionEvent e) {
-        int id;
-        try {
-            id = Integer.parseInt(txtId.getText().trim());
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "ID inválido", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
+    private void agregarDireccion() {
+        String d = txtDireccion.getText().trim();
+        if (!d.isEmpty()) { 
+            modeloDirecciones.addElement(new DireccionItem(-1, d)); 
+            txtDireccion.setText(""); 
         }
+    }
+
+    private void quitarDireccion() {
+        int idx = lstDirecciones.getSelectedIndex();
+        if (idx != -1) modeloDirecciones.remove(idx);
+    }
+
+    private void guardarCambios() {
+    try {
+        int id = Integer.parseInt(txtId.getText().trim());
         String nombre = txtNombre.getText().trim();
-        String direccion = txtDireccion.getText().trim();
 
-        if (nombre.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "El nombre es obligatorio", "Error", JOptionPane.ERROR_MESSAGE);
-            txtNombre.requestFocus();
-            return;
-        }
-
+        // Telefonos
         List<String> telefonos = new ArrayList<>();
         for (int i = 0; i < modeloTelefonos.size(); i++) {
-            String t = modeloTelefonos.get(i).trim();
-            if (!t.isEmpty()) telefonos.add(t);
+            telefonos.add(modeloTelefonos.get(i));
         }
 
-        boolean ok = dao.actualizarPersonaYTelefonos(id, nombre, direccion, telefonos);
-        if (ok) {
-            JOptionPane.showMessageDialog(this, "Datos actualizados correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            limpiar();
-        } else {
-            JOptionPane.showMessageDialog(this, "No se pudo actualizar (¿ID inexistente?)", "Error", JOptionPane.ERROR_MESSAGE);
+        // Direcciones
+        List<Integer> direccionIds = new ArrayList<>();
+        List<String> nuevasDirecciones = new ArrayList<>();
+
+        for (int i = 0; i < modeloDirecciones.size(); i++) {
+            DireccionItem di = modeloDirecciones.get(i);
+            if (di.id > 0) {
+                direccionIds.add(di.id);
+            } else {
+                direccionIds.add(null);
+                nuevasDirecciones.add(di.calle);
+            }
         }
-    }
 
-    private void limpiar() {
-        txtId.setText("");
-        txtNombre.setText("");
-        txtDireccion.setText("");
-        txtTelefono.setText("");
-        modeloTelefonos.clear();
-        txtId.requestFocus();
-    }
+        boolean ok = dao.actualizarPersona(id, nombre, telefonos, direccionIds, nuevasDirecciones);
+        if (ok) JOptionPane.showMessageDialog(this, "Cambios guardados correctamente");
+        else JOptionPane.showMessageDialog(this, "No se pudieron guardar los cambios");
 
-   // public static void main(String[] args) {
-       // SwingUtilities.invokeLater(() -> {
-           // try {
-               // UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-           // } catch (Exception ignored) {}
-           // new ModificarPersonaFrame().setVisible(true);
-        // });
-   // }
+    } catch (NumberFormatException ex) {
+        JOptionPane.showMessageDialog(this, "ID inválido");
+    }
+}
+
+    //public static void main(String[] args) {
+        //SwingUtilities.invokeLater(() -> new ModificarPersonaFrame().setVisible(true));
+    //}
 }

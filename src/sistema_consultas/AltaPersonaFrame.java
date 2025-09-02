@@ -10,16 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AltaPersonaFrame extends JFrame {
-
     private final JTextField txtNombre = new JTextField(25);
     private final JTextField txtDireccion = new JTextField(25);
-    private final JTextField txtTelefono = new JTextField(15);
+    private final DefaultListModel<String> modeloDirecciones = new DefaultListModel<>();
+    private final JList<String> lstDirecciones = new JList<>(modeloDirecciones);
 
+    private final JTextField txtTelefono = new JTextField(15);
     private final DefaultListModel<String> modeloTelefonos = new DefaultListModel<>();
     private final JList<String> lstTelefonos = new JList<>(modeloTelefonos);
 
-    private final JButton btnAgregarTelefono = new JButton("Agregar teléfono");
-    private final JButton btnQuitarTelefono = new JButton("Quitar seleccionado");
+    private final JButton btnAgregarDir = new JButton("Agregar dirección");
+    private final JButton btnQuitarDir = new JButton("Quitar seleccionada");
+    private final JButton btnAgregarTel = new JButton("Agregar teléfono");
+    private final JButton btnQuitarTel = new JButton("Quitar seleccionado");
     private final JButton btnGuardar = new JButton("Guardar");
     private final JButton btnLimpiar = new JButton("Limpiar");
 
@@ -28,42 +31,42 @@ public class AltaPersonaFrame extends JFrame {
     public AltaPersonaFrame() {
         setTitle("Altas — Agenda");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(10,10));
 
-        // Panel superior: datos básicos
-        JPanel pnlDatos = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        // Panel superior: nombre
+        JPanel pnlNombre = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlNombre.add(new JLabel("Nombre:"));
+        pnlNombre.add(txtNombre);
+        add(pnlNombre, BorderLayout.NORTH);
 
-        gbc.gridx = 0; gbc.gridy = 0; pnlDatos.add(new JLabel("Nombre:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 0; pnlDatos.add(txtNombre, gbc);
+        // Panel central: direcciones y teléfonos
+        JPanel pnlCentro = new JPanel(new GridLayout(2,1,10,10));
 
-        gbc.gridx = 0; gbc.gridy = 1; pnlDatos.add(new JLabel("Dirección:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 1; pnlDatos.add(txtDireccion, gbc);
+        // Direcciones
+        JPanel pnlDir = new JPanel(new BorderLayout());
+        JPanel pnlAddDir = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlAddDir.add(new JLabel("Dirección:"));
+        pnlAddDir.add(txtDireccion);
+        pnlAddDir.add(btnAgregarDir);
+        pnlDir.add(pnlAddDir, BorderLayout.NORTH);
+        pnlDir.add(new JScrollPane(lstDirecciones), BorderLayout.CENTER);
+        pnlDir.add(btnQuitarDir, BorderLayout.SOUTH);
+        pnlDir.setBorder(BorderFactory.createTitledBorder("Direcciones (1..N)"));
+        pnlCentro.add(pnlDir);
 
-        add(pnlDatos, BorderLayout.NORTH);
+        // Teléfonos
+        JPanel pnlTel = new JPanel(new BorderLayout());
+        JPanel pnlAddTel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlAddTel.add(new JLabel("Teléfono:"));
+        pnlAddTel.add(txtTelefono);
+        pnlAddTel.add(btnAgregarTel);
+        pnlTel.add(pnlAddTel, BorderLayout.NORTH);
+        pnlTel.add(new JScrollPane(lstTelefonos), BorderLayout.CENTER);
+        pnlTel.add(btnQuitarTel, BorderLayout.SOUTH);
+        pnlTel.setBorder(BorderFactory.createTitledBorder("Teléfonos (0..N)"));
+        pnlCentro.add(pnlTel);
 
-        // Panel central: teléfonos
-        JPanel pnlTelefonos = new JPanel(new BorderLayout(5, 5));
-        JPanel pnlAdd = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlAdd.add(new JLabel("Teléfono:"));
-        pnlAdd.add(txtTelefono);
-        pnlAdd.add(btnAgregarTelefono);
-
-        JPanel pnlBtnsTel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlBtnsTel.add(btnQuitarTelefono);
-
-        lstTelefonos.setVisibleRowCount(6);
-        JScrollPane scroll = new JScrollPane(lstTelefonos);
-
-        pnlTelefonos.add(pnlAdd, BorderLayout.NORTH);
-        pnlTelefonos.add(scroll, BorderLayout.CENTER);
-        pnlTelefonos.add(pnlBtnsTel, BorderLayout.SOUTH);
-
-        pnlTelefonos.setBorder(BorderFactory.createTitledBorder("Teléfonos (0..N)"));
-
-        add(pnlTelefonos, BorderLayout.CENTER);
+        add(pnlCentro, BorderLayout.CENTER);
 
         // Panel inferior: acciones
         JPanel pnlAcciones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -72,8 +75,10 @@ public class AltaPersonaFrame extends JFrame {
         add(pnlAcciones, BorderLayout.SOUTH);
 
         // Listeners
-        btnAgregarTelefono.addActionListener(this::onAgregarTelefono);
-        btnQuitarTelefono.addActionListener(this::onQuitarTelefono);
+        btnAgregarDir.addActionListener(this::onAgregarDireccion);
+        btnQuitarDir.addActionListener(e -> quitarSeleccion(lstDirecciones, modeloDirecciones));
+        btnAgregarTel.addActionListener(this::onAgregarTelefono);
+        btnQuitarTel.addActionListener(e -> quitarSeleccion(lstTelefonos, modeloTelefonos));
         btnGuardar.addActionListener(this::onGuardar);
         btnLimpiar.addActionListener(e -> limpiar());
 
@@ -81,48 +86,48 @@ public class AltaPersonaFrame extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    private void onAgregarTelefono(ActionEvent e) {
-        String tel = txtTelefono.getText().trim();
-        if (tel.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Ingresa un teléfono", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
+    private void onAgregarDireccion(ActionEvent e) {
+        String dir = txtDireccion.getText().trim();
+        if (!dir.isEmpty()) {
+            modeloDirecciones.addElement(dir);
+            txtDireccion.setText("");
         }
-        modeloTelefonos.addElement(tel);
-        txtTelefono.setText("");
-        txtTelefono.requestFocus();
     }
 
-    private void onQuitarTelefono(ActionEvent e) {
-        int idx = lstTelefonos.getSelectedIndex();
-        if (idx == -1) {
-            JOptionPane.showMessageDialog(this, "Selecciona un teléfono para quitar", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
+    private void onAgregarTelefono(ActionEvent e) {
+        String tel = txtTelefono.getText().trim();
+        if (!tel.isEmpty()) {
+            modeloTelefonos.addElement(tel);
+            txtTelefono.setText("");
         }
-        modeloTelefonos.remove(idx);
+    }
+
+    private void quitarSeleccion(JList<String> list, DefaultListModel<String> model) {
+        int idx = list.getSelectedIndex();
+        if (idx != -1) model.remove(idx);
     }
 
     private void onGuardar(ActionEvent e) {
         String nombre = txtNombre.getText().trim();
-        String direccion = txtDireccion.getText().trim();
-
         if (nombre.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "El nombre es obligatorio", "Error", JOptionPane.ERROR_MESSAGE);
-            txtNombre.requestFocus();
+            JOptionPane.showMessageDialog(this,"El nombre es obligatorio","Error",JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        List<String> telefonos = new ArrayList<>();
-        for (int i = 0; i < modeloTelefonos.size(); i++) {
-            String t = modeloTelefonos.get(i).trim();
-            if (!t.isEmpty()) telefonos.add(t);
+        List<String> direcciones = new ArrayList<>();
+        for (int i=0;i<modeloDirecciones.size();i++) direcciones.add(modeloDirecciones.get(i));
+        if (direcciones.isEmpty()) {
+            JOptionPane.showMessageDialog(this,"Agrega al menos una dirección","Error",JOptionPane.ERROR_MESSAGE);
+            return;
         }
+        List<String> telefonos = new ArrayList<>();
+        for (int i=0;i<modeloTelefonos.size();i++) telefonos.add(modeloTelefonos.get(i));
 
-        boolean ok = dao.agregarPersona(nombre, direccion, telefonos);
+        boolean ok = dao.agregarPersona(nombre,direcciones,telefonos);
         if (ok) {
-            JOptionPane.showMessageDialog(this, "Persona guardada correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,"Persona guardada correctamente","Éxito",JOptionPane.INFORMATION_MESSAGE);
             limpiar();
         } else {
-            JOptionPane.showMessageDialog(this, "No se pudo guardar. Revisa la consola para más detalles.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,"No se pudo guardar. Revisa la consola.","Error",JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -130,18 +135,13 @@ public class AltaPersonaFrame extends JFrame {
         txtNombre.setText("");
         txtDireccion.setText("");
         txtTelefono.setText("");
+        modeloDirecciones.clear();
         modeloTelefonos.clear();
-        txtNombre.requestFocus();
     }
 
-   // public static void main(String[] args) {
-       // SwingUtilities.invokeLater(() -> {
-           // try {
-               // UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-           // } catch (Exception ignored) {}
-           // new AltaPersonaFrame().setVisible(true);
-       // });
-   // }
-    
-    
+    // --- Main local para pruebas ---
+    //public static void main(String[] args) {
+        
+        //SwingUtilities.invokeLater(() -> new AltaPersonaFrame().setVisible(true));
+    //}
 }

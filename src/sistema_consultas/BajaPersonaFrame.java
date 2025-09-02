@@ -54,7 +54,7 @@ public class BajaPersonaFrame extends JFrame {
         }
     }
 
-    //public static void main(String[] args) {
-        //SwingUtilities.invokeLater(() -> new BajaPersonaFrame().setVisible(true));
+   // public static void main(String[] args) {
+       // SwingUtilities.invokeLater(() -> new BajaPersonaFrame().setVisible(true));
     //}
 }
